@@ -130,3 +130,92 @@ Your projects will be displayed at the end of the semester on [UIA ICT OS Dev Sh
 
 ## Additional Information
 Refer to your lecture materials and use the course forum for any questions.
+
+# UiA Operating System
+
+This repository contains the source code for the University of Agder Operating System (UiAOS).
+
+## Building and Running from Terminal
+
+### Prerequisites
+
+Ensure you have the following installed:
+- CMake (version 3.22.1 or higher)
+- NASM assembler
+- GCC/G++ compiler with multilib support
+- QEMU for emulation
+- Limine bootloader
+
+### Building the Project
+
+1. Create a build directory and navigate to it:
+```bash
+mkdir -p build && cd build
+```
+
+2. Configure the project with CMake:
+```bash
+cmake ..
+```
+
+3. Build the kernel:
+```bash
+cmake --build .
+```
+
+4. Create the bootable ISO image:
+```bash
+cmake --build . --target uiaos-create-image
+```
+
+### Running the OS
+
+#### Using QEMU
+
+Run the OS in QEMU with:
+```bash
+qemu-system-i386 -cdrom kernel.iso
+```
+
+For better debugging, use:
+```bash
+qemu-system-i386 -cdrom kernel.iso -serial stdio
+```
+
+#### With KVM acceleration (if available):
+```bash
+qemu-system-i386 -cdrom kernel.iso -enable-kvm
+```
+
+#### With GUI and additional options:
+```bash
+qemu-system-i386 -cdrom kernel.iso -m 128M -vga std -display gtk
+```
+
+### Debugging
+
+To debug the OS using GDB:
+
+1. Start QEMU with the GDB server:
+```bash
+qemu-system-i386 -cdrom kernel.iso -s -S
+```
+
+2. In another terminal, connect GDB:
+```bash
+gdb
+(gdb) target remote localhost:1234
+(gdb) symbol-file kernel.bin
+(gdb) break main
+(gdb) continue
+```
+
+## Project Structure
+
+- `src/` - Source code files
+- `include/` - Header files
+- `build/` - Build output directory
+
+## Configuration
+
+To modify the build configuration, edit the CMakeLists.txt file.

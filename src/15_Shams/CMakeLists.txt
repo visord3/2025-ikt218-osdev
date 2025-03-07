@@ -56,17 +56,29 @@ set(CMAKE_ASM_NASM_COMPILE_OBJECT
 ########################################
 set(OS_KERNEL_LINKER "${CMAKE_CURRENT_SOURCE_DIR}/src/arch/${OS_ARCH_TARGET}/linker.ld")
 
-# Add executable target for the kernel
+# Add executable target for the kernel with corrected source paths
 add_executable(uiaos-kernel 
     src/gdt.asm
-	src/gdt.c
+    src/gdt.c
     src/multiboot2.asm
     src/kernel.c
+	  src/util.c
+	src/interupts/idt.c
+	src/interupts/idt.asm
+	src/vga.c
+	src/boot.s
+	src/keyboard.c
+	
+ 
+    src/boot.s
 )
 
 # Include directories for the kernel target
-target_include_directories(uiaos-kernel PUBLIC include)
-
+target_include_directories(uiaos-kernel PUBLIC 
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/15_Shams_backup/include  # Added backup include directory
+)
 
 # Specify compile options for C and C++
 target_compile_options(uiaos-kernel PRIVATE

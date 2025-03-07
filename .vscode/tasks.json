@@ -20,6 +20,7 @@
     {
       "label": "Launch QEMU",
       "type": "shell",
+      "command": "cd ${config:cmake.buildDirectory} && qemu-system-i386 -s -S -cdrom kernel.iso -m 128 -serial stdio",
       "isBackground": true,
       "presentation": {
         "reveal": "always",
@@ -28,19 +29,38 @@
       "options": {
         "cwd": "${workspaceFolder}"
       },
-      "command": "/bin/bash ${config:cmake.sourceDirectory}/scripts/start_qemu.sh ${config:cmake.buildDirectory}/kernel.iso ${config:cmake.buildDirectory}/disk.iso",
       "problemMatcher": {
         "pattern": {
-          "regexp": "^(Starting QEMU)",
-          "line": 1,
+          "regexp": ".",
+          "file": 1,
+          "location": 2,
+          "message": 3
         },
         "background": {
-            "activeOnStart": true,
-            "beginsPattern": "^(Starting QEMU)",
-            "endsPattern": "^(Starting QEMU)"
+          "activeOnStart": true,
+          "beginsPattern": ".",
+          "endsPattern": "."
         }
       },
-      "dependsOn": ["CMake Build"]
+      "dependsOn": [
+        "CMake Build"
+      ]
+    },
+    {
+      "label": "Launch QEMU (non-debug)",
+      "type": "shell",
+      "command": "cd ${config:cmake.buildDirectory} && qemu-system-i386 -cdrom kernel.iso -m 128 -serial stdio",
+      "problemMatcher": []
+    },
+    {
+      "label": "Build kernel",
+      "type": "shell",
+      "command": "cd ${workspaceFolder} && cmake --build ${config:cmake.buildDirectory} --target uiaos-create-image",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": "$gcc"
     }
   ]
-} 
+}

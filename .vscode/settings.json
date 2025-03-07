@@ -1,8 +1,18 @@
 {
-    "cmake.buildDirectory": "${workspaceFolder}/build/group_name",
-    "cmake.sourceDirectory": "${workspaceFolder}/src/group_name",
+    "cmake.buildDirectory": "${workspaceFolder}/build",
+    "cmake.sourceDirectory": "/workspaces/2025-ikt218-osdev/src/15_Shams",
     "cmake.useCMakePresets": "never",
-    "C_Cpp.errorSquiggles": "disabled",
+    "cmake.configureOnOpen": false,
+    "C_Cpp.default.compilerPath": "/usr/bin/gcc",
+    "C_Cpp.default.includePath": [
+        "${workspaceFolder}/src/15_Shams/include/**",
+        "${workspaceFolder}/src/15_Shams/**"
+    ],
+    "C_Cpp.default.cStandard": "c11",
+    "C_Cpp.default.cppStandard": "c++17",
+    "C_Cpp.errorSquiggles": "enabled",
+    "C_Cpp.intelliSenseEngine": "default",
+    "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
     "files.associations": {
         "cstddef": "cpp",
         "*.tcc": "cpp",
@@ -17,5 +27,4 @@
         "memory.h": "c",
         "limits.h": "c"
     }
-
 }

@@ -1,52 +1,54 @@
-#include <libc/gdt.h>  // Include the file that defines the Global Descriptor Table (GDT)
+#include "gdt.h"
+#include "util.h"
 
-// This function tells the processor where the GDT is located in memory
-extern void gdt_flush(uint32_t gdt_ptr);
+// Use the renamed externs to match your assembly code
+extern void gdt_flush(uint32_t);
+extern void tss_flush();
 
-// This function fills in the info for one "box" in the GDT, telling it where the memory starts,
-// how much memory it can access, and what permissions it has
-void gdt_set_gate(int32_t index, uint32_t base, uint32_t limit, uint8_t access, uint8_t granularity) {
-    
-    // Set the starting address (base) of this segment
-    gdt[index].base_low = base & 0xFFFF;           // Take the lowest 16 bits of the base address
-    gdt[index].base_middle = (base >> 16) & 0xFF;  // Take the next 8 bits of the base address
-    gdt[index].base_high = (base >> 24) & 0xFF;    // Take the highest 8 bits of the base address
-    
-    // Set how big this segment is (the segment limit)
-    gdt[index].limit_low = limit & 0xFFFF;         // Take the lowest 16 bits of the limit
-    gdt[index].granularity = (limit >> 16) & 0x0F; // Take the next 4 bits of the limit
-    
-    // Set how this segment works (size and permissions)
-    gdt[index].granularity |= granularity & 0xF0;  // Set the size and granularity settings
-    gdt[index].access = access;                    // Set the permissions for this segment (who can access it and how)
+segment_descriptor_t segment_descriptors[6];
+descriptor_table_ptr_t descriptor_table_pointer;
+task_state_segment_t task_segment;
+
+void setup_global_descriptor_table()
+{
+    descriptor_table_pointer.size = (sizeof(struct segment_descriptor_struct) * 6) - 1;
+    descriptor_table_pointer.address = (uint32_t)&segment_descriptors;
+
+    create_descriptor_entry(0, 0, 0, 0, 0);                // Null segment
+    create_descriptor_entry(1, 0, 0xFFFFFFFF, 0x9A, 0xCF); // Kernel code segment
+    create_descriptor_entry(2, 0, 0xFFFFFFFF, 0x92, 0xCF); // Kernel data segment
+    create_descriptor_entry(3, 0, 0xFFFFFFFF, 0xFA, 0xCF); // User code segment
+    create_descriptor_entry(4, 0, 0xFFFFFFFF, 0xF2, 0xCF); // User data segment
+    configure_task_segment(5, 0x10, 0x0);
+
+    gdt_flush((uint32_t)&descriptor_table_pointer);
+    tss_flush();
 }
 
-// This function sets up the GDT and tells the CPU to use it
-void init_gdt() {
-    
-    // Calculate the size of the GDT (how many bytes it needs)
-    gdt_ptr.limit = (sizeof(struct gdt_entry_t) * GDT_ENTRIES) - 1;
-    
-    // Set the location of the GDT in memory
-    gdt_ptr.base = (uint32_t)&gdt;
+void create_descriptor_entry(uint32_t index, uint32_t base_addr, uint32_t limit, uint8_t access, uint8_t flags)
+{
+    segment_descriptors[index].base_low = (base_addr & 0xFFFF);
+    segment_descriptors[index].base_middle = (base_addr >> 16) & 0xFF;
+    segment_descriptors[index].base_high = (base_addr >> 24) & 0xFF;
 
-    // Set up the entries (segments) inside the GDT.
+    segment_descriptors[index].limit_low = (limit & 0xFFFF);
+    segment_descriptors[index].limit_high_flags = (limit >> 16) & 0x0F;
 
-    // Entry 0: Null segment (must be empty, always included in the GDT).
-    gdt_set_gate(0, 0, 0, 0, 0);  // Always required and must be zero
-    
-    // Entry 1: Kernel code segment (used to run the main system code).
-    gdt_set_gate(1, 0, 0xFFFFFFFF, 0x9A, 0xCF);  // Code that can access the entire memory
-    
-    // Entry 2: Kernel data segment (used to store and access system data).
-    gdt_set_gate(2, 0, 0xFFFFFFFF, 0x92, 0xCF);  // Data that can use the entire memory
-    
-    // Entry 3: User mode code segment (used to run programs created by users).
-    gdt_set_gate(3, 0, 0xFFFFFFFF, 0xFA, 0xCF);  // Code run by user programs
-    
-    // Entry 4: User mode data segment (used to store data for user programs).
-    gdt_set_gate(4, 0, 0xFFFFFFFF, 0xF2, 0xCF);  // Data for user programs
-    
-    // Tell the CPU to start using the new GDT.
-    gdt_flush((uint32_t)&gdt_ptr);
+    segment_descriptors[index].limit_high_flags |= flags & 0xF0;
+    segment_descriptors[index].access_byte = access;
+}
+
+void configure_task_segment(uint32_t index, uint16_t kernel_ss, uint32_t kernel_esp)
+{
+    uint32_t base_addr = (uint32_t)&task_segment;
+    uint32_t segment_limit = base_addr + sizeof(task_segment);
+
+    create_descriptor_entry(index, base_addr, segment_limit, 0xE9, 0x00);
+    memset(&task_segment, 0, sizeof(task_segment));
+
+    task_segment.ss0 = kernel_ss;
+    task_segment.esp0 = kernel_esp;
+
+    task_segment.cs = 0x08 | 0x3;
+    task_segment.ss = task_segment.ds = task_segment.es = task_segment.fs = task_segment.gs = 0x10 | 0x3;
 }

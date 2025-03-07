@@ -19,3 +19,10 @@ gdt_flush:
 
 .flush:
     ret               ; Go back to the C program that called this function.
+
+[GLOBAL tss_flush]    ; Export the function for C code to use
+
+tss_flush:
+    mov ax, 0x2B      ; 0x2B is the TSS entry (index 5 × 8 + 3)
+    ltr ax            ; Load Task Register with the segment selector
+    ret               ; Return to C code

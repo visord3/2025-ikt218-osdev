@@ -1,13 +1,15 @@
 ENTRY(_start)
 
 SECTIONS {
+    /* Put multiboot header first */
     . = 1M;
-
-    .boot :
+    .multiboot_header :
     {
-        /* Ensure that the multiboot header is at the beginning! */
         *(.multiboot_header)
     }
+
+    /* Entry point */
+    ENTRY(_start)
 
     . = ALIGN(4K);
     .text :
